@@ -40,5 +40,5 @@ void AsyncShiftIn_reset(const AsyncShiftIn * asyncShiftIn) {
 
 void AsyncShiftIn_shift(const AsyncShiftIn * asyncShiftIn, unsigned int bitNumber, uint8_t state) {
   Serial.print(bitNumber);
-  Serial.print((state == HIGH ? ":HIGH " : ":LOW "));
+  Serial.print((state == HIGH ? ":HIGH " : ":LOW  "));
 }
