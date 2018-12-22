@@ -70,7 +70,7 @@ void AsyncShiftIn::loop() {
   
   // Sample
   int readValue = 0;
-  if (state == READ_SAMPLE) {
+  if (state == READ_SAMPLE || state == RES6_SAMPLE) {
     readValue = digitalRead(data);
   }
   
@@ -84,7 +84,7 @@ void AsyncShiftIn::loop() {
   lastActiveTime = micros();
   
   // run callbacks
-  if (AsyncShiftIn_shift && state == READ_SAMPLE) {
+  if (AsyncShiftIn_shift && (state == READ_SAMPLE || state == RES6_SAMPLE)) {
     AsyncShiftIn_shift(this, nextBit, readValue);
     ++nextBit;
   }
