@@ -35,34 +35,33 @@
 #include <Arduino.h>
 #include <AsyncShiftIn.h>
 
-void AsyncShiftIn::init(uint8_t data, uint8_t clock, uint8_t load,
-                        uint8_t reset, unsigned int length,
-                        unsigned int clkPeriod, unsigned int resetPeriod) {
+void AsyncShiftIn::init(const PinConfiguration* const pinConfiguration, const TimeConfiguration* const timeConfiguration, unsigned int length) {
+  this->pinConfiguration = pinConfiguration;
+  this->timeConfiguration = timeConfiguration;
+  
   // Init the hardware
-  this->data = data;
-  this->clock = clock;
-  this->load = load;
-  this->reset = reset;
-  pinMode(this->clock, OUTPUT);
-  pinMode(this->load, OUTPUT);
-  pinMode(this->reset, OUTPUT);
-  pinMode(this->data, INPUT);
-  digitalWrite(this->clock, LOW);
-  digitalWrite(this->load, LOW);
-  digitalWrite(this->reset, LOW);
+  pinMode(this->pinConfiguration->clock, OUTPUT);
+  pinMode(this->pinConfiguration->load, OUTPUT);
+  pinMode(this->pinConfiguration->reset, OUTPUT);
+  pinMode(this->pinConfiguration->data, INPUT);
+  digitalWrite(this->pinConfiguration->clock, LOW);
+  digitalWrite(this->pinConfiguration->load, LOW);
+  digitalWrite(this->pinConfiguration->reset, LOW);
 
+  setLength(length);
+}
+
+void AsyncShiftIn::setLength(LengthType length) {
   this->length = length;
   this->nextBit = length;  // act as if we were at the end
   this->state = READ_SAMPLE;
-  this->clkPeriod = clkPeriod;
-  this->resetPeriod = resetPeriod;
   this->currentSleepDuration = 0;
   this->lastActiveTime = 0;
 }
 
 void AsyncShiftIn::loop() {
   // check for activity
-  unsigned long sleepDuration(
+  SleepTimeType sleepDuration(
       micros() - lastActiveTime);  // this avoids the overflow problem
   if (sleepDuration <= currentSleepDuration) {
     return;
@@ -72,7 +71,7 @@ void AsyncShiftIn::loop() {
   stateTransition();
 
   // Sample
-  int readValue = 0;
+  uint8_t readValue = 0;
   if (state == READ_SAMPLE || state == RES6_SAMPLE) {
     readValue = digitalRead(data);
   }
@@ -140,34 +139,34 @@ void AsyncShiftIn::stateTransition() {
 void AsyncShiftIn::setupSleepDuration() {
   switch (state) {
     case READ_HIGH:
-      currentSleepDuration = clkPeriod;
+      currentSleepDuration = this->timeConfiguration->clkPeriod;
       break;
     case READ_LOW:
-      currentSleepDuration = clkPeriod / 2;
+      currentSleepDuration = this->timeConfiguration->clkPeriod / 2;
       break;
     case READ_SAMPLE:
-      currentSleepDuration = clkPeriod / 2;
+      currentSleepDuration = this->timeConfiguration->clkPeriod / 2;
       break;
     case RES1:
-      currentSleepDuration = resetPeriod;
+      currentSleepDuration = this->timeConfiguration->resetPeriod;
       break;
     case RES2:
-      currentSleepDuration = resetPeriod;
+      currentSleepDuration = this->timeConfiguration->resetPeriod;
       break;
     case RES3:
-      currentSleepDuration = resetPeriod;
+      currentSleepDuration = this->timeConfiguration->resetPeriod;
       break;
     case RES4:
-      currentSleepDuration = resetPeriod;
+      currentSleepDuration = this->timeConfiguration->resetPeriod;
       break;
     case RES5:
-      currentSleepDuration = resetPeriod;
+      currentSleepDuration = this->timeConfiguration->resetPeriod;
       break;
     case RES6:
-      currentSleepDuration = resetPeriod / 2;
+      currentSleepDuration = this->timeConfiguration->resetPeriod / 2;
       break;
     case RES6_SAMPLE:
-      currentSleepDuration = resetPeriod / 2;
+      currentSleepDuration = this->timeConfiguration->resetPeriod / 2;
       break;
   }
 }
@@ -175,31 +174,31 @@ void AsyncShiftIn::setupSleepDuration() {
 void AsyncShiftIn::setupOutput() {
   switch (state) {
     case READ_HIGH:
-      digitalWrite(clock, HIGH);
+      digitalWrite(this->pinConfiguration->clock, HIGH);
       break;
     case READ_LOW:
-      digitalWrite(clock, LOW);
+      digitalWrite(this->pinConfiguration->clock, LOW);
       break;
     case READ_SAMPLE:
       break;
     case RES1:
-      digitalWrite(clock, LOW);
-      digitalWrite(load, HIGH);
+      digitalWrite(this->pinConfiguration->clock, LOW);
+      digitalWrite(this->pinConfiguration->load, HIGH);
       break;
     case RES2:
-      digitalWrite(clock, HIGH);
+      digitalWrite(this->pinConfiguration->clock, HIGH);
       break;
     case RES3:
-      digitalWrite(clock, LOW);
+      digitalWrite(this->pinConfiguration->clock, LOW);
       break;
     case RES4:
-      digitalWrite(reset, HIGH);
+      digitalWrite(this->pinConfiguration->reset, HIGH);
       break;
     case RES5:
-      digitalWrite(reset, LOW);
+      digitalWrite(this->pinConfiguration->reset, LOW);
       break;
     case RES6:
-      digitalWrite(load, LOW);
+      digitalWrite(this->pinConfiguration->load, LOW);
       break;
     case RES6_SAMPLE:
       break;

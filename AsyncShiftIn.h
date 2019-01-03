@@ -37,23 +37,46 @@
 
 #include <Arduino.h>
 
+using AsyncShiftInPinType = uint8_t;
+
+/**
+ * \brief Class that implements an asynchronous Shift Register input reader.
+ *
+ * The class is setup to support a Marklin S88 bus. For a "regular" shift
+ * register, you can leave the "load" pin unused.
+ */
 class AsyncShiftIn
 {
 public:
-  using PinIndexType = uint8_t;
+  using PinIndexType = AsyncShiftInPinType;
   using ClockTimeType = unsigned int;
   using SleepTimeType = unsigned long;
+  using LengthType = unsigned int;
+
+  typedef struct
+  {
+    /// Input Pin for data from the shift register
+    AsyncShiftInPinType data;
+    /// Output Pin for generating the clock signal
+    AsyncShiftInPinType clock;
+    /// Output Pin for generating the load signal
+    AsyncShiftInPinType load;
+    /// Output Pin for generating the reset signal
+    AsyncShiftInPinType reset;
+  } PinConfiguration;
+
+  typedef struct
+  {
+    /// The duration of the clock period in the read phase (in MICROseconds!)
+    ClockTimeType clkPeriod;
+    /// The duration of the clock period in the reset phase (in MICROseconds!)
+    ClockTimeType resetPeriod;
+  } TimeConfiguration;
 
 protected:
-  // Pinout configuration
-  PinIndexType data;
-  PinIndexType clock;
-  PinIndexType load;
-  PinIndexType reset;
-
   // Internal variables
-  unsigned int length;
-  unsigned int nextBit;
+  LengthType length;
+  LengthType nextBit;
   enum State
   {
     RES1,
@@ -69,10 +92,8 @@ protected:
   };
   State state;
 
-  ClockTimeType clkPeriod;
-  ClockTimeType resetPeriod;
-  TimeType currentSleepDuration;
-  TimeType lastActiveTime;
+  const PinConfiguration *const pinConfiguration = nullptr;
+  const TimeConfiguration *const timeConfiguration = nullptr;
 
   void setupOutput();
   void setupSleepDuration();
@@ -82,17 +103,17 @@ public:
   /**
    * \brief Initializes this shift register.
    *
-   * \param data Input Pin for data from the shift register
-   * \param clock Output Pin for generating the clock signal
-   * \param load Output Pin for generating the load signal
-   * \param reset Output Pin for generating the reset signal
-   * \param length The number of bits to shift in before resetting the shift register
-   * \param clkPeriod The duration of the clock period in the read phase (in MICROseconds!)
-   * \param resetPeriod The duration of the clock period in the reset phase (in MICROseconds!)
+   * \param length The number of bits to shift in before resetting the shift
    */
-  void init(uint8_t data, uint8_t clock, uint8_t load, uint8_t reset,
-            unsigned int length, unsigned int clkPeriod,
-            unsigned int resetPeriod);
+  void init(const PinConfiguration *const pinConfiguration, const TimeConfiguration *const timeConfiguration, LengthType length);
+
+  /**
+   * \brief Update the length of the shift register.
+   * 
+   * The update is applied immediately and the object is set back to the state right after calling init.
+   * The register will be re-read from the beginning.
+   */
+  void setLength(LengthType length);
 
   /**
    * \brief Main Loop to update pins and trigger callbacks.
@@ -116,7 +137,7 @@ public:
  * \param state The state of the bit that was just shifted in (LOW/HIGH)
  */
 extern void AsyncShiftIn_shift(const AsyncShiftIn *asyncShiftIn,
-                               unsigned int bitNumber, uint8_t state)
+                               LengthType bitNumber, uint8_t state)
     __attribute__((weak));
 
 /**
