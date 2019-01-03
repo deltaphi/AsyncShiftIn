@@ -1,10 +1,10 @@
 #include <AsyncShiftIn.h>
 
-#define SHIFT_REGISTER_LENGTH 16
+constexpr AsyncShiftInPinIndexType kShiftRegisterLength{16};
 
 boolean initialized;
 
-AsyncShiftIn shiftRegister0;
+AsyncShiftIn<2, 3, 6, 4> shiftRegister0(kShiftRegisterLength, 90, 50);
 
 void setup() {
   // Setup serial for output
@@ -14,7 +14,7 @@ void setup() {
   initialized = false;
 
   // Initializing the shift register
-  shiftRegister0.init(2, 3, 6, 4, SHIFT_REGISTER_LENGTH, 90, 50);
+  shiftRegister0.init();
 
   Serial.println(F("Initialized Shift Register ingerface."));
 
