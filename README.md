@@ -4,8 +4,8 @@ AsyncShiftIn
 A simple library for Arduino to asynchronously read a shift register.
 
 The advantage over the shiftIn tutorial is that while the tutorial
-version blocks the Arduino until the entire shift register has been read.
-The asynchronous version allows for processing to happen in between shift
+version blocks the Arduino until the entire shift register has been read,
+the asynchronous version allows for processing to happen in between shift
 register actions.
 
 Note that this library can not make any timing guarantees. All clock periods
