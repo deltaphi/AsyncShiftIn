@@ -71,8 +71,8 @@ protected:
 
   ClockTimeType clkPeriod;
   ClockTimeType resetPeriod;
-  TimeType currentSleepDuration;
-  TimeType lastActiveTime;
+  SleepTimeType currentSleepDuration;
+  SleepTimeType lastActiveTime;
 
   void setupOutput();
   void setupSleepDuration();
